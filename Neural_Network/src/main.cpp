@@ -11,6 +11,7 @@ int main( int argc, char* argv[] )
     cmdParser.set_required<std::string>( "lf", "LabelFile", "Path to training data label file." );
     cmdParser.set_required<uint32_t>( "hlayer", "NumHiddenLayer", "Num hidden layers." );
     cmdParser.set_required<uint32_t>( "n", "NumNeuron", "Num neurons in each layers." );
+    cmdParser.set_optional<bool>("b", "Batch", false, "Batch training.");
 
     if ( !cmdParser.run() )
     {
@@ -22,6 +23,7 @@ int main( int argc, char* argv[] )
     std::string trainingDataPath_label = cmdParser.get<std::string>( "lf" ).c_str();
     uint32_t const numHiddenLayer = cmdParser.get<uint32_t>( "hlayer" );
     uint32_t const numNeuron = cmdParser.get<uint32_t>( "n" );
+    bool const batchTraining = cmdParser.get<bool>( "b" );
 
     data_handler *dh = new data_handler();
 	dh->read_feature_vector(trainingDataPath_feature);
@@ -45,14 +47,15 @@ int main( int argc, char* argv[] )
         std::cout<<(int)topology[i]<<" ";
     }
     std::cout<<std::endl;
+    
 
 
     // Create neural network trainer
     NeuralNetwork::TrainerSettings trainerSettings;
     trainerSettings.learningRate = 0.001;
-    trainerSettings.momentum = 0.0;
-    trainerSettings.useBatchLearning = false;
-    trainerSettings.maxEpochs = 200;
+    trainerSettings.momentum = 0.5;
+    trainerSettings.useBatchLearning = batchTraining;
+    trainerSettings.maxEpochs = 500;
     trainerSettings.desiredAccuracy = 90;
 
     nn.set_trainerSettings(trainerSettings);

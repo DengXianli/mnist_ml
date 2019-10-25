@@ -29,7 +29,7 @@ void NeuralNetwork::Train(data_handler* dh)
 
     std::cout	<< std::endl << " Neural Network Training Starting: " << std::endl
                 << "==========================================================================" << std::endl
-                << " LR: " << learningRate_ << ", Momentum: " << momentum_ << ", Max Epochs: " << maxEpochs_ << std::endl
+                << " LR: " << learningRate_ << ", Momentum: " << momentum_ << ", Max Epochs: " << maxEpochs_ << ", Batch training: " << (useBatchLearning_ ? "Yes" : "No") << std::endl
                 << "==========================================================================" << std::endl << std::endl;
     // Train network using training dataset for training
     //--------------------------------------------------------------------------------------------------------
@@ -65,11 +65,7 @@ void NeuralNetwork::RunEpoch( std::vector<data *>* training_data )
 {
     int incorrectEntries = 0;
     data* trainingEntry = training_data->at(0);
-    // If using batch learning - update the weights
-    if ( useBatchLearning_ )
-    {
-        UpdateWeights();
-    }
+    
 
     //double MSE = 0; placeholder for calculation of MSE;
     //for ( auto trainingEntry : *training_data )
@@ -83,6 +79,12 @@ void NeuralNetwork::RunEpoch( std::vector<data *>* training_data )
         {
             incorrectEntries++;
         }
+    }
+
+    // If using batch learning - update the weights
+    if ( useBatchLearning_ )
+    {
+        UpdateWeights();
     }
     
     
