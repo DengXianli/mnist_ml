@@ -37,12 +37,13 @@ public:
 private:
 
 	void RunEpoch( std::vector<data *>* training_data );
-	void GetSetAccuracyAndMSE( std::vector<data *>* dataset, double& accuracy);
+	void Evaluation( std::vector<data *>* dataset, double& accuracy, double& mse); // calculate accuracy and mse
 	void UpdateWeights();
 	void feedForward(std::vector<uint8_t> * inputVals); // data type depends on the inputs
 	void backProp(int desire_output);
 	int getResult();// for get current Result index from NN output
 	uint8_t getResultLabel(int result_ind); // get the label for result index
+	double GetMSE(int desire_output); // get MSE from one dataset 
 
 	//NeuralNetwork settings
 	std::vector<Layer> layers_;

@@ -47,15 +47,15 @@ int main( int argc, char* argv[] )
         std::cout<<(int)topology[i]<<" ";
     }
     std::cout<<std::endl;
-    
+
 
 
     // Create neural network trainer
     NeuralNetwork::TrainerSettings trainerSettings;
-    trainerSettings.learningRate = 0.001;
+    trainerSettings.learningRate = 0.7;
     trainerSettings.momentum = 0.5;
     trainerSettings.useBatchLearning = batchTraining;
-    trainerSettings.maxEpochs = 500;
+    trainerSettings.maxEpochs = 200;
     trainerSettings.desiredAccuracy = 90;
 
     nn.set_trainerSettings(trainerSettings);

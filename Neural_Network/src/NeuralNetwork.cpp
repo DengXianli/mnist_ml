@@ -1,5 +1,6 @@
 #include "NeuralNetwork.h"
 #include <iostream>
+#include <cmath>
 
 
 NeuralNetwork::NeuralNetwork(const std::vector<uint32_t> &topology)
@@ -20,9 +21,9 @@ void NeuralNetwork::Train(data_handler* dh)
     trainingSetAccuracy_ = 0;
     validationSetAccuracy_ = 0;
     testSetAccuracy_ = 0;
-    //trainingSetMSE_ = 0;
-    //validationSetMSE_ = 0;
-    //testSetMSE_ = 0;
+    trainingSetMSE_ = 0;
+    validationSetMSE_ = 0;
+    testSetMSE_ = 0;
 
     // Print header
     //-------------------------------------------------------------------------
@@ -40,24 +41,21 @@ void NeuralNetwork::Train(data_handler* dh)
         RunEpoch( dh->get_training_data() );
 
         // Get generalization set accuracy and MSE
-        GetSetAccuracyAndMSE( dh->get_validation_data(), validationSetAccuracy_ );
+        Evaluation( dh->get_validation_data(), validationSetAccuracy_, validationSetMSE_ );
 
         std::cout << "Epoch :" << currentEpoch_;
-        std::cout << " Training Set Accuracy:" << trainingSetAccuracy_; 
-        //<< "%, MSE: " << trainingSetMSE_;
-        std::cout << " Validation Set Accuracy:" << validationSetAccuracy_ << std::endl;
-        //<< "%, MSE: " << validationSetMSE_ << std::endl;
+        std::cout << " Training Set Accuracy:" << trainingSetAccuracy_ << "%, MSE: " << trainingSetMSE_;
+        std::cout << " Validation Set Accuracy:" << validationSetAccuracy_  << "%, MSE: " << validationSetMSE_ << std::endl;
 
         currentEpoch_++;
     }
 
     // Get test set accuracy and MSE
-    GetSetAccuracyAndMSE( dh->get_test_data(), testSetAccuracy_ );
+    Evaluation( dh->get_test_data(), testSetAccuracy_, testSetMSE_ );
 
     // Print validation accuracy and MSE
     std::cout << std::endl << "Training Complete!!! - > Elapsed Epochs: " << currentEpoch_ << std::endl;
-    std::cout << " Test Set Accuracy: " << testSetAccuracy_ << std::endl;
-    //std::cout << " Validation Set MSE: " << testSetMSE_ << std::endl << std::endl;
+    std::cout << " Test Set Accuracy: " << testSetAccuracy_ << std::endl << "% MSE: " << testSetMSE_ << std::endl << std::endl;
 
 }
 
@@ -65,6 +63,7 @@ void NeuralNetwork::RunEpoch( std::vector<data *>* training_data )
 {
     int incorrectEntries = 0;
     data* trainingEntry = training_data->at(0);
+    trainingSetMSE_ = 0;
     
 
     //double MSE = 0; placeholder for calculation of MSE;
@@ -74,6 +73,7 @@ void NeuralNetwork::RunEpoch( std::vector<data *>* training_data )
         data* trainingEntry = training_data->at(it);
         // Feed inputs through network and back propagate errors
         feedForward( trainingEntry->get_feature_vector() );
+        trainingSetMSE_ += GetMSE( trainingEntry->get_enumerated_label() );
         backProp( trainingEntry->get_enumerated_label() );
         if( getResult() != trainingEntry->get_enumerated_label() )
         {
@@ -91,18 +91,20 @@ void NeuralNetwork::RunEpoch( std::vector<data *>* training_data )
 
     // Update training accuracy and MSE
     trainingSetAccuracy_ = 100.0 - ( (double)incorrectEntries / training_data->size() * 100.0 );
-    //m_trainingSetMSE = MSE / ( m_pNetwork->m_numOutputs * trainingSet.size() );
+    trainingSetMSE_ = trainingSetMSE_ / training_data->size();
 }
 
-void NeuralNetwork::GetSetAccuracyAndMSE( std::vector<data *>* dataset, double& accuracy)
+void NeuralNetwork::Evaluation( std::vector<data *>* dataset, double& accuracy, double& mse)
 {
 
     accuracy = 0;
+    mse = 0;
 
     int numIncorrectResults = 0;
     for ( auto dataEntry : *dataset )
     {
         feedForward( dataEntry->get_feature_vector() );
+        mse += GetMSE( dataEntry->get_enumerated_label() );
 
         if( getResult() != dataEntry->get_enumerated_label() )
         {
@@ -111,6 +113,7 @@ void NeuralNetwork::GetSetAccuracyAndMSE( std::vector<data *>* dataset, double& 
     }
 
     accuracy = 100.0f - ( (double)numIncorrectResults / dataset->size() * 100.0 );
+    mse = mse / dataset->size();
 }
 
 void NeuralNetwork::set_trainerSettings(TrainerSettings& trainerSettings)
@@ -261,4 +264,17 @@ int NeuralNetwork::getResult()
 uint8_t NeuralNetwork::getResultLabel(int result_ind)
 {
     return label_vector_[result_ind];
+}
+
+double NeuralNetwork::GetMSE(int desire_output)
+{
+    double sum = 0;
+    std::vector<double> desire_output_ary(class_map_.size());
+    desire_output_ary[desire_output] = 1;
+    Layer &output_layer = layers_.back();
+    for (size_t output_ind = 0; output_ind < class_map_.size(); output_ind++)
+    {
+        sum += pow((output_layer.outputs_[output_ind] - desire_output_ary[output_ind]), 2);
+    }
+    sum = sum / 2.0;
 }
